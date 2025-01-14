@@ -79,6 +79,14 @@ Files in the `example_files` directory contain completely fake data and do not i
 - **File Size Requirement:** The file should be at least 10KB in size for testing purposes.
 - **Logging:** Logs detailed information and errors to help with debugging.
 
+## Server-Side
+
+- If you wanna test in local, you need to set 127.0.0.1 as host and set different port than 53 for example 9999 (default) 
+```bash
+  cd src_server
+  python SmoothFlowServer.py --host 127.0.0.1 --port 9999
+```
+
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
