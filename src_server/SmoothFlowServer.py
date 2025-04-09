@@ -176,7 +176,7 @@ def combine_results(query, file_chunks, out_dir):
     return file_chunks
 
 
-def dns_response(query, ttl, response_ip, file_chunks, out_dir, debug):
+def dns_response(query, ttl, response_ip, file_chunks, out_dir):
     response = dns.message.make_response(query)
 
     # Check the query type
@@ -185,10 +185,6 @@ def dns_response(query, ttl, response_ip, file_chunks, out_dir, debug):
 
     if qtype == dns.rdatatype.A:
         # Assuming the query is an A record query
-
-        ip_bytes = b'\x10\x20\x30\x40'  # Bu sabit örnek; ileride dinamik yaparız
-        response_ip = '.'.join(str(b) for b in ip_bytes)
-
         answer = dns.rrset.from_text(qname, ttl, dns.rdataclass.IN, dns.rdatatype.A, response_ip)
         print(answer)
         response.answer.append(answer)
@@ -222,7 +218,7 @@ def dns_server(host, port, ttl, response_ip, out_dir, debug):
                 try:
                     data, client_address = udp_socket.recvfrom(4096)
                     query = dns.message.from_wire(data)
-                    response, file_chunks = dns_response(query, ttl, response_ip, file_chunks, out_dir, debug)
+                    response, file_chunks = dns_response(query, ttl, response_ip, file_chunks, out_dir)
                     udp_socket.sendto(response.to_wire(), client_address)
 
                 except KeyboardInterrupt as k:
