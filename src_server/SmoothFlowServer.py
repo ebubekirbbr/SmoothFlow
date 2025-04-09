@@ -193,9 +193,7 @@ def dns_response(query, ttl, response_ip, file_chunks, out_dir, debug):
         try:
             file_chunks = combine_results(str(qname), file_chunks, out_dir)
         except ValueError as v:
-            if debug == 1:
-                print(f"Request is not expected format for SmootFlow.")
-
+            pass
     else:
         # If the query type is not A, respond with an empty answer section
         response.set_rcode(dns.rcode.NXDOMAIN)
