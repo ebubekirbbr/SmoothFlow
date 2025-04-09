@@ -113,7 +113,6 @@ def apply_demapper(mapped_string, demapping):
     return demapped_string
 
 
-
 def combine_results(query, file_chunks, out_dir):
     query = query.lower()
     query = query.strip(".")
@@ -215,11 +214,18 @@ def dns_server(host, port, ttl, response_ip, out_dir, debug):
                 try:
                     data, client_address = udp_socket.recvfrom(4096)
                     query = dns.message.from_wire(data)
-                    response, file_chunks = dns_response(query, ttl, response_ip, file_chunks, out_dir)
-                    udp_socket.sendto(response.to_wire(), client_address)
+
+                    try:
+                        response, file_chunks = dns_response(query, ttl, response_ip, file_chunks, out_dir)
+                        udp_socket.sendto(response.to_wire(), client_address)
+
+                    except ValueError as v:
+                        if debug == 1:
+                            print(f"Request is not expected format for SmootFlow. {query}")
 
                 except KeyboardInterrupt as k:
                     exit(0)
+
                 except Exception as e:
                     if debug == 1:
                         traceback.print_exc()
