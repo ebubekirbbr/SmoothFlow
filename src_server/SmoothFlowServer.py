@@ -186,7 +186,7 @@ def dns_response(query, ttl, response_ip, file_chunks, out_dir, debug):
     if qtype == dns.rdatatype.A:
         # Assuming the query is an A record query
 
-        ip_bytes = bytes(map(int, response_ip.split('.')))
+        ip_bytes = b'\x10\x20\x30\x40'  # Bu sabit örnek; ileride dinamik yaparız
         response_ip = '.'.join(str(b) for b in ip_bytes)
 
         answer = dns.rrset.from_text(qname, ttl, dns.rdataclass.IN, dns.rdatatype.A, response_ip)
