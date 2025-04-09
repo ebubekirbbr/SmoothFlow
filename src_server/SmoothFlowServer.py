@@ -176,7 +176,7 @@ def combine_results(query, file_chunks, out_dir):
     return file_chunks
 
 
-def dns_response(query, ttl, response_ip, file_chunks, out_dir):
+def dns_response(query, ttl, response_ip, file_chunks, out_dir, debug):
     response = dns.message.make_response(query)
 
     # Check the query type
@@ -189,7 +189,13 @@ def dns_response(query, ttl, response_ip, file_chunks, out_dir):
         print(answer)
         response.answer.append(answer)
         response.set_rcode(dns.rcode.NOERROR)
-        file_chunks = combine_results(str(qname), file_chunks, out_dir)
+
+        try:
+            file_chunks = combine_results(str(qname), file_chunks, out_dir)
+        except ValueError as v:
+            if debug == 1:
+                print(f"Request is not expected format for SmootFlow.")
+
     else:
         # If the query type is not A, respond with an empty answer section
         response.set_rcode(dns.rcode.NXDOMAIN)
@@ -214,14 +220,8 @@ def dns_server(host, port, ttl, response_ip, out_dir, debug):
                 try:
                     data, client_address = udp_socket.recvfrom(4096)
                     query = dns.message.from_wire(data)
-
-                    try:
-                        response, file_chunks = dns_response(query, ttl, response_ip, file_chunks, out_dir)
-                        udp_socket.sendto(response.to_wire(), client_address)
-
-                    except ValueError as v:
-                        if debug == 1:
-                            print(f"Request is not expected format for SmootFlow. {query.question[0].name}")
+                    response, file_chunks = dns_response(query, ttl, response_ip, file_chunks, out_dir, debug)
+                    udp_socket.sendto(response.to_wire(), client_address)
 
                 except KeyboardInterrupt as k:
                     exit(0)
