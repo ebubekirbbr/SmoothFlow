@@ -221,7 +221,7 @@ def dns_server(host, port, ttl, response_ip, out_dir, debug):
 
                     except ValueError as v:
                         if debug == 1:
-                            print(f"Request is not expected format for SmootFlow. {query.question[0].name}. IN {query.question[0].type}")
+                            print(f"Request is not expected format for SmootFlow. {query.question[0].name}")
 
                 except KeyboardInterrupt as k:
                     exit(0)
