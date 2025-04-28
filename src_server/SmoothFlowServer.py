@@ -132,7 +132,14 @@ def combine_results(query, file_chunks, out_dir):
         if file_identifier in file_chunks and file_chunks[file_identifier]["file_name"]:
 
             if payload == "ZmluaXNo":  # base64 for finish
-                content = "".join(file_chunks[file_identifier]["data"])
+                try:
+                    content = "".join(file_chunks[file_identifier]["data"])
+                except:
+
+                    pprint.pprint(file_chunks[file_identifier])
+                    print("combine error")
+                    content = ""
+
                 decoded_content = content.encode("utf-8")
 
                 if 'file_name' in file_chunks[file_identifier] and file_chunks[file_identifier]["file_name"]:
