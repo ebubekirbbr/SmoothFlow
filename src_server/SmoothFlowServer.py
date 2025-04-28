@@ -138,6 +138,7 @@ def combine_results(query, file_chunks, out_dir):
 
                     pprint.pprint(file_chunks[file_identifier])
                     print("combine error")
+
                     content = ""
 
                 decoded_content = content.encode("utf-8")

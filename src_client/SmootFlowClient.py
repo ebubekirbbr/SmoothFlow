@@ -212,7 +212,8 @@ class TunnelTraffic:
     def read_and_encode_base64_file(self, params):
         file_content = self.read_file_as_bytes_and_encrypt(params["config"]["file_path"])
         encoded_file = self.encode_string(file_content)
-        if len(encoded_file) < 13333:
+        #if len(encoded_file) < 13333:
+        if len(encoded_file) < 100:
             raise Exception("File is not appropriate for tunnel test. Please use another file bigger then 100KB.")
 
         return encoded_file
@@ -246,7 +247,7 @@ class TunnelTraffic:
     def generate_traffic(self, params):
         file_size = os.path.getsize(params["config"]["file_path"])
         file_size_in_kb = file_size / 1024
-        if file_size_in_kb < 10:
+        if file_size_in_kb < 1:
             raise Exception("[ERROR] File is too small try bigger file. File size: {} Kb".format(round(file_size_in_kb, 4)))
 
         else:
