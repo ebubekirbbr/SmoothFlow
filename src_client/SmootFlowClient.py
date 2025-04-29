@@ -7,7 +7,6 @@ import platform
 import traceback
 import subprocess
 from datetime import datetime
-import chardet
 
 uppercase_mapping = {
     'A': 'â',
