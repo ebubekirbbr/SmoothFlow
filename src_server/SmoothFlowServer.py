@@ -196,7 +196,7 @@ def dns_response(query, ttl, response_ip, file_chunks, out_dir):
     if qtype == dns.rdatatype.A:
         # Assuming the query is an A record query
         answer = dns.rrset.from_text(qname, ttl, dns.rdataclass.IN, dns.rdatatype.A, response_ip)
-        print(f"{answer}                       ", end="\r", flush=True)
+        print(f"{answer}                                         ", end="\r", flush=True)
         response.answer.append(answer)
         response.set_rcode(dns.rcode.NOERROR)
 
