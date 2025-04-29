@@ -7,6 +7,7 @@ import platform
 import traceback
 import subprocess
 from datetime import datetime
+import chardet
 
 uppercase_mapping = {
     'A': 'â',
@@ -85,6 +86,10 @@ def logger(text, exc_info=False):
 class TunnelTraffic:
     def __init__(self):
         self.debug = 1
+        self.length_params = {
+            "min_length": 18,
+            "max_length": 20
+        }
 
     def calculate_base64_encoded_size(self, original_size_bytes):
         encoded_size = math.ceil(original_size_bytes / 3) * 4
@@ -130,8 +135,8 @@ class TunnelTraffic:
     def random_string_generator(self, encoded_file, params, length):
         string_list = []
         encoded_file = encoded_file
-        max_length = params["max_length"]
-        min_length = params["min_length"]
+        max_length = self.length_params["max_length"]
+        min_length = self.length_params["min_length"]
         all_data_char_count = len(encoded_file)
 
         while len(encoded_file) > length:
@@ -174,10 +179,10 @@ class TunnelTraffic:
         errors = []
 
         resolver = dns.resolver.Resolver()
-        resolver.nameservers = params["config"]["dns_ips"]
-        resolver.timeout = params["config"]["timeout"]
-        resolver.lifetime = params["config"]["timeout"]
-        resolver.port = params["config"]["dns_port"]
+        resolver.nameservers = params["dns_ips"]
+        resolver.timeout = params["timeout"]
+        resolver.lifetime = params["timeout"]
+        resolver.port = params["dns_port"]
         if len(dns_request_list) < 100:
             raise "File is not appropriate for tunnel test. Please use another file bigger then 100KB."
 
@@ -187,8 +192,8 @@ class TunnelTraffic:
             while status == "fail":
 
                 try:
-                    result = resolver.resolve(domainName, params["config"]["query_type"])
-                    time.sleep(params["config"]["timeout"])
+                    result = resolver.resolve(domainName, params["query_type"])
+                    time.sleep(params["timeout"])
                     dnsRequestResult = [queryResult.to_text() for queryResult in result]
                     req = f"{domainName}: {''.join(dnsRequestResult)} - OK"
                     if self.debug == 1: logger(req)
@@ -209,21 +214,22 @@ class TunnelTraffic:
                 except Exception as e:
                     logger(f"Error: {e}", exc_info=True)
 
-    def read_and_encode_base64_file(self, params):
-        file_content = self.read_file_as_bytes_and_encrypt(params["config"]["file_path"])
+    def read_and_encode_base64_file(self, file_path):
+        file_content = self.read_file_as_bytes_and_encrypt(file_path)
         encoded_file = self.encode_string(file_content)
-        #if len(encoded_file) < 13333:
-        if len(encoded_file) < 100:
+        if len(encoded_file) < 13333:
             raise Exception("File is not appropriate for tunnel test. Please use another file bigger then 100KB.")
 
         return encoded_file
 
     def prepare_data(self, unique_string, params, encoded_file, file_name):
-        domains = params["config"]["tunnel_domains"]
+        domains = params["tunnel_domains"]
+
         if "length" in params and params["length"]:
             length = params["length"]
         else:
-            length = params["max_length"]
+            length = self.length_params["max_length"]
+
         string_list = self.random_string_generator(encoded_file, params, length)
         dns_request_list = []
 
@@ -245,20 +251,43 @@ class TunnelTraffic:
         return dns_request_list
 
     def generate_traffic(self, params):
-        file_size = os.path.getsize(params["config"]["file_path"])
+
+        file_path = params["file_path"]
+
+        file_size = os.path.getsize(file_path)
         file_size_in_kb = file_size / 1024
-        if file_size_in_kb < 1:
+        if file_size_in_kb < 10:
             raise Exception("[ERROR] File is too small try bigger file. File size: {} Kb".format(round(file_size_in_kb, 4)))
 
         else:
 
-            file_name = os.path.basename(params["config"]["file_path"])
+            file_name = os.path.basename(file_path)
             self.cache_cleaner()
             unique_string = self.generate_unique_string()
-            encoded_file = self.read_and_encode_base64_file(params)
+            encoded_file = self.read_and_encode_base64_file(file_path)
+
             data = self.prepare_data(unique_string, params, encoded_file, file_name)
 
         return data, unique_string
+
+    def fix_file_encoding(self, params):
+        file_path = params["file_path"]
+
+        # Step 1: Detect the encoding of the file
+        with open(file_path, 'rb') as file:
+            raw_data = file.read()
+            result = chardet.detect(raw_data)
+            file_encoding = result['encoding']
+
+        print(f"Detected encoding: {file_encoding}")
+
+        # Step 2: Open the file with the detected encoding and read the content
+        with open(file_path, 'r', encoding=file_encoding) as file:
+            content = file.read()
+
+        # Step 3: Save the content in UTF-8 encoding
+        with open(file_path, 'w', encoding='utf-8') as file:
+            file.write(content)
 
 
 def argument_parsing():
@@ -283,11 +312,6 @@ def main():
     args = argument_parsing()
 
     params = {
-        "min_length": 18,
-        "max_length": 20
-    }
-
-    configs = {
         "file_path": args.filepath,
         "dns_ips": args.dnsips.split(","),
         "dns_port": args.dnsport,
@@ -296,9 +320,10 @@ def main():
         "timeout": args.timeout
         }
 
-    params["config"] = configs
-
     logger("{}\n".format(params))
+
+    tunnel_generator.fix_file_encoding(params)
+
     data, unique_string = tunnel_generator.generate_traffic(params)
 
     tunnel_generator.send_dns_queries(params, data)
