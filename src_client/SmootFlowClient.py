@@ -72,6 +72,7 @@ import math
 import base64
 import dns.resolver
 from tqdm import tqdm
+import chardet
 
 print("version: 1.0.2")
 
