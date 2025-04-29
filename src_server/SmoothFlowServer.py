@@ -32,7 +32,7 @@ install_and_import("tldextract", "tldextract==5.1.1")
 install_and_import("dns.resolver", "dnspython==2.0.0")
 install_and_import("yagmail", "yagmail==0.15.293")
 install_and_import("httpcore", "httpcore==0.13.3")
-install_and_import("urllib3", "urllib3==1.26.5")
+install_and_import("requests", "requests==2.28.1")
 
 
 import base64
