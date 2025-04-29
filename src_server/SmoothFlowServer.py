@@ -27,11 +27,13 @@ def install_and_import(package, package_and_version, from_imports=None):
 
 
 install_and_import("base64", "cryptography==39.0.1")
-install_and_import("base64", "chardet==5.2.0")
+install_and_import("chardet", "chardet==5.2.0")
 install_and_import("tldextract", "tldextract==5.1.1")
 install_and_import("dns.resolver", "dnspython==2.0.0")
 install_and_import("yagmail", "yagmail==0.15.293")
-install_and_import("yagmail", "httpcore==0.13.3")
+install_and_import("httpcore", "httpcore==0.13.3")
+install_and_import("urllib3", "urllib3==1.26.5")
+
 
 import base64
 import dns.resolver

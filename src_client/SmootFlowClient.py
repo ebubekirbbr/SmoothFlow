@@ -74,7 +74,7 @@ import dns.resolver
 from tqdm import tqdm
 import chardet
 
-print("version: 1.0.2")
+print("version: 1.1.0")
 
 
 def logger(text, exc_info=False):
@@ -323,7 +323,7 @@ def main():
 
     logger("{}\n".format(params))
 
-    tunnel_generator.fix_file_encoding(params)
+    #tunnel_generator.fix_file_encoding(params)
 
     data, unique_string = tunnel_generator.generate_traffic(params)
 
