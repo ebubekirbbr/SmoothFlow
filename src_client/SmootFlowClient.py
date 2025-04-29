@@ -64,6 +64,7 @@ def install_and_import(package, package_and_version, from_imports=None):
 
 
 install_and_import("base64", "cryptography==39.0.1")
+install_and_import("chardet", "chardet==5.2.0")
 install_and_import("dns.resolver", "dnspython==2.0.0")
 install_and_import("yagmail", "yagmail==0.15.293")
 install_and_import("tqdm", "tqdm==4.46.0", from_imports=["tqdm"])
