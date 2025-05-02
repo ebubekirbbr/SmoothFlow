@@ -87,10 +87,6 @@ def logger(text, exc_info=False):
 class TunnelTraffic:
     def __init__(self):
         self.debug = 1
-        self.length_params = {
-            "min_length": 18,
-            "max_length": 20
-        }
 
     def calculate_base64_encoded_size(self, original_size_bytes):
         encoded_size = math.ceil(original_size_bytes / 3) * 4
@@ -136,8 +132,8 @@ class TunnelTraffic:
     def random_string_generator(self, encoded_file, params, length):
         string_list = []
         encoded_file = encoded_file
-        max_length = self.length_params["max_length"]
-        min_length = self.length_params["min_length"]
+        max_length = params["max_length"]
+        min_length = params["min_length"]
         all_data_char_count = len(encoded_file)
 
         while len(encoded_file) > length:
@@ -226,10 +222,7 @@ class TunnelTraffic:
     def prepare_data(self, unique_string, params, encoded_file, file_name):
         domains = params["tunnel_domains"]
 
-        if "length" in params and params["length"]:
-            length = params["length"]
-        else:
-            length = self.length_params["max_length"]
+        length = params["max_length"]
 
         string_list = self.random_string_generator(encoded_file, params, length)
         dns_request_list = []
@@ -299,6 +292,8 @@ def argument_parsing():
     parser.add_argument("--filepath", required=False, help='file path', type=str, default=None)
     parser.add_argument("--querytype", required=False, help='query type', type=str, default='A')
     parser.add_argument("--timeout", required=False, help='timeout', type=float, default=1)
+    parser.add_argument("--min_length", required=False, help='min fqdn length', type=int, default=18)
+    parser.add_argument("--max_length", required=False, help='max fqdn length', type=int, default=20)
 
     args = parser.parse_args()
 
@@ -318,8 +313,10 @@ def main():
         "dns_port": args.dnsport,
         "tunnel_domains": args.tunneldomains.split(","),
         "query_type": args.querytype,
-        "timeout": args.timeout
-        }
+        "timeout": args.timeout,
+        "min_length": args.min_length,
+        "max_length": args.max_length
+    }
 
     logger("{}\n".format(params))
 
