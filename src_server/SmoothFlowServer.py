@@ -161,20 +161,22 @@ def combine_results(query, file_chunks, out_dir, debug):
                     del file_chunks[file_identifier]
 
             else:
-                if len(file_chunks[file_identifier]["data"]) > 0:
-                    data_index = order // 10 - 1
+                #if len(file_chunks[file_identifier]["data"]) > 0:
+                data_index = order // 10 - 1
+                if payload not in file_chunks[file_identifier]["data"]:
                     file_chunks[file_identifier]["data"].insert(data_index, payload)
                     file_chunks[file_identifier]["payload"].insert(order, payload_query)
+                else:
+                    print(f"duplice payload: {payload}")
 
         else:
             if order == 0:  # init for file identifier
-                file_chunks[file_identifier] = {"file_name": None, "data": [], "file_name_chunks": [payload], "payload": [payload_query]}
+                file_chunks[file_identifier] = {"file_name": None, "data": [], "file_name_chunks": [payload], "payload": []}
 
             elif order < 10:  # for multiple filename chunk
                 file_chunks[file_identifier]["file_name_chunks"].insert(order, payload)
-                file_chunks[file_identifier]["payload"].insert(order, payload_query)
 
-            elif order == 10: # for set file name
+            elif order == 10:  # for set file name
                 file_name_payload = "".join(file_chunks[file_identifier]["file_name_chunks"])
                 file_payload = decode64(file_name_payload)
                 file_payload = file_payload.rpartition("-")
@@ -183,8 +185,8 @@ def combine_results(query, file_chunks, out_dir, debug):
 
                 file_chunks[file_identifier]["file_name"] = file_name
                 data_index = order//10-1
-                file_chunks[file_identifier]["data"].insert(data_index, payload)
-                file_chunks[file_identifier]["payload"].insert(order, payload_query)
+                #file_chunks[file_identifier]["data"].insert(data_index, payload)
+                #file_chunks[file_identifier]["payload"].insert(order, payload_query)
 
     return file_chunks
 
