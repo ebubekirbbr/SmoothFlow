@@ -163,11 +163,9 @@ def combine_results(query, file_chunks, out_dir, debug):
             else:
                 #if len(file_chunks[file_identifier]["data"]) > 0:
                 data_index = order // 10 - 1
-                if payload not in file_chunks[file_identifier]["data"]:
+                if file_chunks[file_identifier]["data"][data_index] != payload:
                     file_chunks[file_identifier]["data"].insert(data_index, payload)
                     file_chunks[file_identifier]["payload"].insert(order, payload_query)
-                else:
-                    print(f"duplice payload: {payload}")
 
         else:
             if order == 0:  # init for file identifier
@@ -176,7 +174,7 @@ def combine_results(query, file_chunks, out_dir, debug):
             elif order < 10:  # for multiple filename chunk
                 file_chunks[file_identifier]["file_name_chunks"].insert(order, payload)
 
-            elif order == 10:  # for set file name
+            elif order == 10:  # for set file name and set first data chunk
                 file_name_payload = "".join(file_chunks[file_identifier]["file_name_chunks"])
                 file_payload = decode64(file_name_payload)
                 file_payload = file_payload.rpartition("-")
