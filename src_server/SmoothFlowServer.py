@@ -163,14 +163,16 @@ def combine_results(query, file_chunks, out_dir, debug):
 
             else:
                 #if len(file_chunks[file_identifier]["data"]) > 0:
+                file_chunks[file_identifier]["data"][data_index] = payload
+                file_chunks[file_identifier]["payload"][data_index] = payload_query
 
-                if payload not in file_chunks[file_identifier]["data"]:
+                """if payload not in file_chunks[file_identifier]["data"]:
                     file_chunks[file_identifier]["data"].insert(data_index, payload)
                     file_chunks[file_identifier]["payload"].insert(order, payload_query)
                 else:
                     if file_chunks[file_identifier]["data"].index(payload) != data_index:
                         file_chunks[file_identifier]["data"].insert(data_index, payload)
-                        file_chunks[file_identifier]["payload"].insert(order, payload_query)
+                        file_chunks[file_identifier]["payload"].insert(order, payload_query)"""
 
         else:
             if order == 0:  # init for file identifier
@@ -186,10 +188,13 @@ def combine_results(query, file_chunks, out_dir, debug):
                 file_name = file_payload[0]
                 part_size = int(file_payload[2])
 
+                file_chunks[file_identifier]["data"] = [None]*part_size
+                file_chunks[file_identifier]["payload"] = [None]*part_size
+
                 file_chunks[file_identifier]["file_name"] = file_name
-                data_index = order//10-1
-                file_chunks[file_identifier]["data"].insert(data_index, payload)
-                file_chunks[file_identifier]["payload"].insert(order, payload_query)
+
+                file_chunks[file_identifier]["data"][data_index] = payload
+                file_chunks[file_identifier]["payload"][data_index] = payload_query
 
     return file_chunks
 
