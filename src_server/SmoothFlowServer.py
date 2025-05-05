@@ -96,7 +96,10 @@ def decode_base64_to_file(content, output_file_path):
 
 def decode_upper_case(text):
     try:
-        text = "xn--" + text
+
+        if "-" in text:
+            text = "xn--" + text
+
         text = text.encode("utf-8")
         text = text.decode('idna')
         text = apply_demapper(text, uppercase_demapping)
