@@ -237,6 +237,9 @@ def dns_server(host, port, ttl, response_ip, out_dir, debug):
                 except KeyboardInterrupt as k:
                     exit(0)
 
+                except dns.name.BadLabelType as b:
+                    pass
+
                 except Exception as e:
                     if debug == 1:
                         traceback.print_exc()
