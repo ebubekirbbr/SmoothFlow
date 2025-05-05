@@ -185,8 +185,8 @@ def combine_results(query, file_chunks, out_dir, debug):
 
                 file_chunks[file_identifier]["file_name"] = file_name
                 data_index = order//10-1
-                #file_chunks[file_identifier]["data"].insert(data_index, payload)
-                #file_chunks[file_identifier]["payload"].insert(order, payload_query)
+                file_chunks[file_identifier]["data"].insert(data_index, payload)
+                file_chunks[file_identifier]["payload"].insert(order, payload_query)
 
     return file_chunks
 
