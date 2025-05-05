@@ -139,7 +139,7 @@ def combine_results(query, file_chunks, out_dir, debug):
                 try:
                     content = "".join(file_chunks[file_identifier]["data"])
                     if debug == 1:
-                        f = open("receivedfile.txt", "w")
+                        f = open(f"{file_identifier}_receivedfile.txt", "w")
                         f.write(content)
                         f.close()
                 except:
@@ -150,7 +150,7 @@ def combine_results(query, file_chunks, out_dir, debug):
                 decoded_content = content.encode("utf-8")
 
                 if debug == 1:
-                    f = open("chunks.json", "w")
+                    f = open(f"{file_identifier}_chunks.json", "w")
                     f.write(json.dumps(file_chunks[file_identifier],indent=2))
                     f.close()
 
