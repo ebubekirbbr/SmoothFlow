@@ -1,3 +1,4 @@
+import json
 import os
 import pprint
 import socket
@@ -115,7 +116,7 @@ def apply_demapper(mapped_string, demapping):
     return demapped_string
 
 
-def combine_results(query, file_chunks, out_dir):
+def combine_results(query, file_chunks, out_dir, debug):
     query = query.lower()
     query = query.strip(".")
 
@@ -129,6 +130,7 @@ def combine_results(query, file_chunks, out_dir):
         pl2 = parsed_subdomain[2].partition("-")
         order = int(pl2[0])
         payload = pl2[2]
+        payload_query = payload
         payload = decode_upper_case(payload)
 
         if file_identifier in file_chunks and file_chunks[file_identifier]["file_name"]:
@@ -136,14 +138,21 @@ def combine_results(query, file_chunks, out_dir):
             if payload == "ZmluaXNo":  # base64 for finish
                 try:
                     content = "".join(file_chunks[file_identifier]["data"])
+                    if debug == 1:
+                        f = open("receivedfile.txt", "w")
+                        f.write(content)
+                        f.close()
                 except:
-
                     pprint.pprint(file_chunks[file_identifier])
                     print("combine error")
-
                     content = ""
 
                 decoded_content = content.encode("utf-8")
+
+                if debug == 1:
+                    f = open("chunks.json", "w")
+                    f.write(json.dumps(file_chunks[file_identifier],indent=2))
+                    f.close()
 
                 if 'file_name' in file_chunks[file_identifier] and file_chunks[file_identifier]["file_name"]:
                     out_file = f"{out_dir}/{file_identifier}/{file_chunks[file_identifier]['file_name']}"
@@ -155,24 +164,17 @@ def combine_results(query, file_chunks, out_dir):
                 if len(file_chunks[file_identifier]["data"]) > 0:
                     data_index = order // 10 - 1
                     file_chunks[file_identifier]["data"].insert(data_index, payload)
+                    file_chunks[file_identifier]["payload"].insert(order, payload_query)
 
         else:
-            if order == 0:
-                #payload = decode64(payload)
-                #payload = payload.rpartition("-")
-                #file_name = payload[0]
-                #part_size = int(payload[2])
+            if order == 0:  # init for file identifier
+                file_chunks[file_identifier] = {"file_name": None, "data": [], "file_name_chunks": [payload], "payload": [payload_query]}
 
-                file_chunks[file_identifier] = {"file_name": None, "data": [], "file_name_chunks": [payload]}
-
-            elif order < 10:
-                #payload = decode64(payload)
-                #payload = payload.rpartition("-")
-                #file_name = payload[0]
-                #part_size = int(payload[2])
+            elif order < 10:  # for multiple filename chunk
                 file_chunks[file_identifier]["file_name_chunks"].insert(order, payload)
+                file_chunks[file_identifier]["payload"].insert(order, payload_query)
 
-            elif order == 10:
+            elif order == 10: # for set file name
                 file_name_payload = "".join(file_chunks[file_identifier]["file_name_chunks"])
                 file_payload = decode64(file_name_payload)
                 file_payload = file_payload.rpartition("-")
@@ -182,11 +184,12 @@ def combine_results(query, file_chunks, out_dir):
                 file_chunks[file_identifier]["file_name"] = file_name
                 data_index = order//10-1
                 file_chunks[file_identifier]["data"].insert(data_index, payload)
+                file_chunks[file_identifier]["payload"].insert(order, payload_query)
 
     return file_chunks
 
 
-def dns_response(query, ttl, response_ip, file_chunks, out_dir):
+def dns_response(query, ttl, response_ip, file_chunks, out_dir, debug):
     response = dns.message.make_response(query)
 
     # Check the query type
@@ -201,7 +204,7 @@ def dns_response(query, ttl, response_ip, file_chunks, out_dir):
         response.set_rcode(dns.rcode.NOERROR)
 
         try:
-            file_chunks = combine_results(str(qname), file_chunks, out_dir)
+            file_chunks = combine_results(str(qname), file_chunks, out_dir, debug)
         except ValueError as v:
             pass
     else:
@@ -228,7 +231,7 @@ def dns_server(host, port, ttl, response_ip, out_dir, debug):
                 try:
                     data, client_address = udp_socket.recvfrom(4096)
                     query = dns.message.from_wire(data)
-                    response, file_chunks = dns_response(query, ttl, response_ip, file_chunks, out_dir)
+                    response, file_chunks = dns_response(query, ttl, response_ip, file_chunks, out_dir, debug)
                     udp_socket.sendto(response.to_wire(), client_address)
 
                 except KeyboardInterrupt as k:
