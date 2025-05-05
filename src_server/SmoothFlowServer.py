@@ -163,9 +163,13 @@ def combine_results(query, file_chunks, out_dir, debug):
             else:
                 #if len(file_chunks[file_identifier]["data"]) > 0:
                 data_index = order // 10 - 1
-                if file_chunks[file_identifier]["data"][data_index] != payload:
+                if payload not in file_chunks[file_identifier]["data"]:
                     file_chunks[file_identifier]["data"].insert(data_index, payload)
                     file_chunks[file_identifier]["payload"].insert(order, payload_query)
+                else:
+                    if file_chunks[file_identifier]["data"].index(payload) != data_index:
+                        file_chunks[file_identifier]["data"].insert(data_index, payload)
+                        file_chunks[file_identifier]["payload"].insert(order, payload_query)
 
         else:
             if order == 0:  # init for file identifier
