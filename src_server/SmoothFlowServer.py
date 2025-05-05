@@ -104,7 +104,7 @@ def decode_upper_case(text):
         text = text.decode('idna')
         text = apply_demapper(text, uppercase_demapping)
     except:
-        pass
+        print(f"decode upper case error: {text}")
 
     return text
 
