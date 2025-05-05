@@ -129,6 +129,7 @@ def combine_results(query, file_chunks, out_dir, debug):
         file_identifier = parsed_subdomain[0]
         pl2 = parsed_subdomain[2].partition("-")
         order = int(pl2[0])
+        data_index = order // 10 - 1
         payload = pl2[2]
         payload_query = payload
         payload = decode_upper_case(payload)
@@ -137,7 +138,7 @@ def combine_results(query, file_chunks, out_dir, debug):
 
             if payload == "ZmluaXNo":  # base64 for finish
                 try:
-                    content = "".join(file_chunks[file_identifier]["data"])
+                    content = "".join(file_chunks[file_identifier]["data"][:data_index])
                     if debug == 1:
                         f = open(f"{file_identifier}_receivedfile.txt", "w")
                         f.write(content)
@@ -162,7 +163,7 @@ def combine_results(query, file_chunks, out_dir, debug):
 
             else:
                 #if len(file_chunks[file_identifier]["data"]) > 0:
-                data_index = order // 10 - 1
+
                 if payload not in file_chunks[file_identifier]["data"]:
                     file_chunks[file_identifier]["data"].insert(data_index, payload)
                     file_chunks[file_identifier]["payload"].insert(order, payload_query)
