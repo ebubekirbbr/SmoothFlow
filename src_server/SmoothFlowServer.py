@@ -255,6 +255,9 @@ def dns_server(host, port, ttl, response_ip, out_dir, debug):
                 except dns.name.BadLabelType as b:
                     pass
 
+                except dns.exception.FormError as f:
+                    pass
+
                 except KeyError as k2:
                     pass
 
