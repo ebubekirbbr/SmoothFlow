@@ -95,19 +95,19 @@ def decode_base64_to_file(content, output_file_path):
     print(f"{output_file_path} has been written.")
 
 def decode_upper_case(text):
-    try:
+    if "-" in text:
+        text = "xn--" + text
 
-        if "-" in text:
-            text = "xn--" + text
+    text_decode = text.encode("utf-8")
+    text_decode = text_decode.decode('idna')
 
-        text = text.encode("utf-8")
-        text = text.decode('idna')
-        text = apply_demapper(text, uppercase_demapping)
-    except:
-        print(f"decode upper case error: {text}")
+    if text == text_decode:
+        text_decode = ("xn--" + text).encode("utf-8")
+        text_decode = text_decode.decode('idna')
 
-    return text
+    text_decode = apply_demapper(text_decode, uppercase_demapping)
 
+    return text_decode
 
 def apply_demapper(mapped_string, demapping):
     demapped_string = ""
@@ -218,10 +218,8 @@ def dns_response(query, ttl, response_ip, file_chunks, out_dir, debug):
         response.answer.append(answer)
         response.set_rcode(dns.rcode.NOERROR)
 
-        try:
-            file_chunks = combine_results(str(qname), file_chunks, out_dir, debug)
-        except ValueError as v:
-            pass
+        file_chunks = combine_results(str(qname), file_chunks, out_dir, debug)
+
     else:
         # If the query type is not A, respond with an empty answer section
         response.set_rcode(dns.rcode.NXDOMAIN)
@@ -248,6 +246,9 @@ def dns_server(host, port, ttl, response_ip, out_dir, debug):
                     query = dns.message.from_wire(data)
                     response, file_chunks = dns_response(query, ttl, response_ip, file_chunks, out_dir, debug)
                     udp_socket.sendto(response.to_wire(), client_address)
+
+                except ValueError as v:
+                    pass
 
                 except KeyboardInterrupt as k:
                     exit(0)

