@@ -191,7 +191,7 @@ def combine_results(query, file_chunks, out_dir, debug):
                 file_payload = file_payload.rpartition("-")
                 file_name = file_payload[0]
                 part_size = int(file_payload[2])
-                print(f"file chunk: {file_name_payload} - file_name: {file_name}                                              ")
+                print(f"{file_identifier} - file chunk: {file_name_payload} - file_name: {file_name}                                              ")
 
                 file_chunks[file_identifier]["data"] = [None]*part_size
                 file_chunks[file_identifier]["payload"] = [None]*part_size
