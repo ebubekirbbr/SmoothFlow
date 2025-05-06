@@ -40,7 +40,7 @@ To get started, you need to install the required Python packages. SmoothFlow wil
 2. Run the script. The script will handle package installation if required:
 
     ```bash
-    python SmootFlowClient.py --dnsips <dns_ips> --dnsport <dns_port> --tunneldomains <tunnel_domains> --filepath <file_path> --querytype <query_type> --timeout <timeout>
+    python SmoothFlowClient.py --dnsips <dns_ips> --dnsport <dns_port> --tunneldomains <tunnel_domains> --filepath <file_path> --querytype <query_type> --timeout <timeout>
     ```
 
 ## Usage
@@ -49,7 +49,7 @@ Run the script with the necessary arguments:
 
 ```bash
   cd src_client
-  python SmootFlowClient.py --dnsips <dns_ips> --dnsport <dns_port> --tunneldomains <tunnel_domains> --filepath <file_path> --querytype <query_type> --timeout <timeout>
+  python SmoothFlowClient.py --dnsips <dns_ips> --dnsport <dns_port> --tunneldomains <tunnel_domains> --filepath <file_path> --querytype <query_type> --timeout <timeout>
 ```
 
 ### Arguments
@@ -65,7 +65,7 @@ Run the script with the necessary arguments:
 
 ```bash
   cd src_client
-  python SmootFlowClient.py --dnsips 8.8.8.8,8.8.4.4 --dnsport 53 --tunneldomains example.com,example.net --filepath ../example_files/MeetingNotes.pdf --querytype A --timeout 1
+  python SmoothFlowClient.py --dnsips 8.8.8.8,8.8.4.4 --dnsport 53 --tunneldomains example.com,example.net --filepath ../example_files/MeetingNotes.pdf --querytype A --timeout 1
 ```
 
 ## Example Files
