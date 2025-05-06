@@ -182,7 +182,8 @@ def combine_results(query, file_chunks, out_dir, debug):
                 file_chunks[file_identifier] = {"file_name": None, "data": [], "file_name_chunks": [payload], "payload": []}
 
             elif order < 10:  # for multiple filename chunk
-                file_chunks[file_identifier]["file_name_chunks"].insert(order, payload)
+                if payload not in file_chunks[file_identifier]["file_name_chunks"]:
+                    file_chunks[file_identifier]["file_name_chunks"].insert(order, payload)
 
             elif order == 10:  # for set file name and set first data chunk
                 file_name_payload = "".join(file_chunks[file_identifier]["file_name_chunks"])
